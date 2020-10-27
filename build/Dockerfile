@@ -1,5 +1,5 @@
-ARG IMAGE_NAME
-FROM ${IMAGE_NAME}:10.2-runtime-ubuntu18.04
+#ARG IMAGE_NAME
+FROM nvidia/cuda:10.2-runtime-ubuntu18.04
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -24,8 +24,13 @@ RUN apt-get update && apt-get install -y \
     git \
     bzip2 \
     libx11-6 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libglib2.0-0\
  && rm -rf /var/lib/apt/lists/*
 
+RUN apt-get install -y 
 # Create a working directory
 RUN mkdir /app
 WORKDIR /app
@@ -35,8 +40,7 @@ RUN adduser --disabled-password --gecos '' --shell /bin/bash user \
  && chown -R user:user /app
 RUN echo "user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-user
 
-USER user
-
+# USER user
 # All users can use /home/user as their home directory
 ENV HOME=/home/user
 RUN chmod 777 /home/user
@@ -93,6 +97,20 @@ RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
  && sudo rm -rf /var/lib/apt/lists/*
 RUN conda install -y -c menpo opencv3=3.1.0 \
  && conda clean -ya
+
+
+
+COPY requirements.txt /app
+RUN pip install cython
+RUN pip install -r requirements.txt
+
+
+COPY DCNv2_new/ /DCNv2
+ENV FORCE_CUDA="1"
+ENV CUDA_HOME="/app"
+RUN pip install -e /DCNv2
+RUN apt-get update
+RUN apt install ffmpeg -y 
 
 # Set the default command to python3
 CMD ["/bin/bash"]

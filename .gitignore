@@ -1,1 +1,7 @@
 .idea
+JDE_dataset/
+models/
+exp/
+results/
+motmetrics/
+build/DCNv2_new/

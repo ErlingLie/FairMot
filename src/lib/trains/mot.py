@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from models.decode import mot_decode
 from models.losses import FocalLoss
-from models.losses import RegL1Loss, RegLoss, NormRegL1Loss, RegWeightedL1Loss
+from models.losses import RegL1Loss, RegLoss, NormRegL1Loss, RegWeightedL1Loss, TripletLoss
 from models.utils import _sigmoid, _tranpose_and_gather_feat
 from utils.post_process import ctdet_post_process
 
@@ -30,7 +30,7 @@ class MotLoss(torch.nn.Module):
         self.nID = opt.nID
         self.classifier = nn.Linear(self.emb_dim, self.nID)
         self.IDLoss = nn.CrossEntropyLoss(ignore_index=-1)
-        #self.TriLoss = TripletLoss()
+        self.TriLoss = TripletLoss()
         self.emb_scale = math.sqrt(2) * math.log(self.nID - 1)
         self.s_det = nn.Parameter(-1.85 * torch.ones(1))
         self.s_id = nn.Parameter(-1.05 * torch.ones(1))
@@ -66,8 +66,8 @@ class MotLoss(torch.nn.Module):
                 id_head = self.emb_scale * F.normalize(id_head)
                 id_target = batch['ids'][batch['reg_mask'] > 0]
                 id_output = self.classifier(id_head).contiguous()
-                id_loss += self.IDLoss(id_output, id_target)
-                #id_loss += self.IDLoss(id_output, id_target) + self.TriLoss(id_head, id_target)
+                #id_loss += self.IDLoss(id_output, id_target)
+                id_loss += self.IDLoss(id_output, id_target) + self.TriLoss(id_head, id_target)
 
         #loss = opt.hm_weight * hm_loss + opt.wh_weight * wh_loss + opt.off_weight * off_loss + opt.id_weight * id_loss
 

@@ -85,7 +85,7 @@ def eval_seq(opt, dataloader, data_type, result_filename, save_dir=None, show_im
     return frame_id, timer.average_time, timer.calls
 
 
-def main(opt, data_root='/data/MOT16/train', det_root=None, seqs=('MOT16-05',), exp_name='demo',
+def main(opt, images_root, data_root='/data/MOT16/train', det_root=None, seqs=('MOT16-05',), exp_name='demo',
          save_images=False, save_videos=False, show_image=True):
     logger.setLevel(logging.INFO)
     result_root = os.path.join(data_root, '..', 'results', exp_name)
@@ -99,10 +99,11 @@ def main(opt, data_root='/data/MOT16/train', det_root=None, seqs=('MOT16-05',), 
     for seq in seqs:
         output_dir = os.path.join(data_root, '..', 'outputs', exp_name, seq) if save_images or save_videos else None
         logger.info('start seq: {}'.format(seq))
-        dataloader = datasets.LoadImages(osp.join(data_root, seq, 'img1'), opt.img_size)
+        dataloader = datasets.LoadImages(osp.join(images_root, seq, "images"), opt.img_size)
         result_filename = os.path.join(result_root, '{}.txt'.format(seq))
-        meta_info = open(os.path.join(data_root, seq, 'seqinfo.ini')).read()
-        frame_rate = int(meta_info[meta_info.find('frameRate') + 10:meta_info.find('\nseqLength')])
+        #meta_info = open(os.path.join(data_root, seq, 'seqinfo.ini')).read()
+        #frame_rate = int(meta_info[meta_info.find('frameRate') + 10:meta_info.find('\nseqLength')])
+        frame_rate = 30
         nf, ta, tc = eval_seq(opt, dataloader, data_type, result_filename,
                               save_dir=output_dir, show_image=show_image, frame_rate=frame_rate)
         n_frame += nf
@@ -140,93 +141,13 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     opt = opts().init()
 
-    if not opt.val_mot16:
-        seqs_str = '''KITTI-13
-                      KITTI-17
-                      ADL-Rundle-6
-                      PETS09-S2L1
-                      TUD-Campus
-                      TUD-Stadtmitte'''
-        data_root = os.path.join(opt.data_dir, 'MOT15/images/train')
-    else:
-        seqs_str = '''MOT16-02
-                      MOT16-04
-                      MOT16-05
-                      MOT16-09
-                      MOT16-10
-                      MOT16-11
-                      MOT16-13'''
-        data_root = os.path.join(opt.data_dir, 'MOT16/train')
-    if opt.test_mot16:
-        seqs_str = '''MOT16-01
-                      MOT16-03
-                      MOT16-06
-                      MOT16-07
-                      MOT16-08
-                      MOT16-12
-                      MOT16-14'''
-        data_root = os.path.join(opt.data_dir, 'MOT16/test')
-    if opt.test_mot15:
-        seqs_str = '''ADL-Rundle-1
-                      ADL-Rundle-3
-                      AVG-TownCentre
-                      ETH-Crossing
-                      ETH-Jelmoli
-                      ETH-Linthescher
-                      KITTI-16
-                      KITTI-19
-                      PETS09-S2L2
-                      TUD-Crossing
-                      Venice-1'''
-        data_root = os.path.join(opt.data_dir, 'MOT15/images/test')
-    if opt.test_mot17:
-        seqs_str = '''MOT17-01-SDP
-                      MOT17-03-SDP
-                      MOT17-06-SDP
-                      MOT17-07-SDP
-                      MOT17-08-SDP
-                      MOT17-12-SDP
-                      MOT17-14-SDP'''
-        data_root = os.path.join(opt.data_dir, 'MOT17/images/test')
-    if opt.val_mot17:
-        seqs_str = '''MOT17-02-SDP
-                      MOT17-04-SDP
-                      MOT17-05-SDP
-                      MOT17-09-SDP
-                      MOT17-10-SDP
-                      MOT17-11-SDP
-                      MOT17-13-SDP'''
-        data_root = os.path.join(opt.data_dir, 'MOT17/images/train')
-    if opt.val_mot15:
-        seqs_str = '''KITTI-13
-                      KITTI-17
-                      ETH-Bahnhof
-                      ETH-Sunnyday
-                      PETS09-S2L1
-                      TUD-Campus
-                      TUD-Stadtmitte
-                      ADL-Rundle-6
-                      ADL-Rundle-8
-                      ETH-Pedcross2
-                      TUD-Stadtmitte'''
-        data_root = os.path.join(opt.data_dir, 'MOT15/images/train')
-    if opt.val_mot20:
-        seqs_str = '''MOT20-01
-                      MOT20-02
-                      MOT20-03
-                      MOT20-05
-                      '''
-        data_root = os.path.join(opt.data_dir, 'MOT20/images/train')
-    if opt.test_mot20:
-        seqs_str = '''MOT20-04
-                      MOT20-06
-                      MOT20-07
-                      MOT20-08
-                      '''
-        data_root = os.path.join(opt.data_dir, 'MOT20/images/test')
-    seqs = [seq.strip() for seq in seqs_str.split()]
-
+    # data_root = "../motmetrics/data"
+    f = open("../motmetrics/seqmap.txt")
+    seqs = [seq.strip() for seq in f.readlines()[1:]]
+    images_root = "../JDE_dataset"
+    data_root = "../motmetrics/data"
     main(opt,
+         images_root,
          data_root=data_root,
          seqs=seqs,
          exp_name='MOT15_val_all_dla34',
